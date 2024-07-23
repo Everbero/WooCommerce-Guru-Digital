@@ -1,18 +1,18 @@
 # WooCommerce Guru Digital
 
-![Plugin Version](https://img.shields.io/badge/version-1.0.6-blue)
-![WordPress Tested Up To](https://img.shields.io/badge/tested%20up%20to-5.7-blue)
+![Plugin Version](https://img.shields.io/badge/version-2.0.0-blue)
+![WordPress Tested Up To](https://img.shields.io/badge/tested%20up%20to-6.3.3-blue)
 ![License](https://img.shields.io/badge/license-GPL--2.0%2B-blue)
 ![PHP Version](https://img.shields.io/badge/php-%3E%3D%207.2-blue)
 
 **Plugin Name:** Woocommerce Guru Digital  
 **Plugin URI:** https://3xweb.site  
 **Description:** Envia pedidos do WooCommerce para a Guru Digital  
-**Version:** 1.0.6  
-**Requires at least:** 4.4  
-**Tested up to:** 5.7  
-**WC requires at least:** 3.0  
-**WC tested up to:** 5.4  
+**Version:** 2.0.0
+**Requires at least:** 5.2  
+**Tested up to:** 6.3.3  
+**WC requires at least:** 6.0  
+**WC tested up to:** 9.1.2  
 **Text Domain:** wc-guru  
 **Domain Path:** /languages  
 
