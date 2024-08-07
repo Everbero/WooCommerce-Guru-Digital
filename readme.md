@@ -8,7 +8,7 @@
 **Plugin Name:** Woocommerce Guru Digital  
 **Plugin URI:** https://3xweb.site  
 **Description:** Envia pedidos do WooCommerce para a Guru Digital  
-**Version:** 2.0.0
+**Version:** 2.0.1
 **Requires at least:** 5.2  
 **Tested up to:** 6.3.3  
 **WC requires at least:** 6.0  

@@ -1,0 +1,40 @@
+/* assets/css/custom-styles.css */
+[data-slug="woocommerce-guru-digital"] > * {
+    background: #000!important;
+}
+[data-slug="woocommerce-guru-digital"] * {
+  color: #fff; /* Branco para contraste */
+}
+[data-slug="woocommerce-guru-digital"] .plugin-title strong {
+  color: #32cd32; /* Verde */
+  font-size: 2em;
+}
+
+[data-slug="woocommerce-guru-digital"] .plugin-description p {
+  color: #fff !important; /* Branco para contraste */
+}
+
+[data-slug="woocommerce-guru-digital"]
+  .active.second.plugin-version-author-uri
+  a {
+  color: #32cd32; /* Verde */
+}
+
+[data-slug="woocommerce-guru-digital"] .row-actions a {
+  font-weight: bold;
+  color: #b3b32b;
+}
+[data-slug="woocommerce-guru-digital"] .row-actions .deactivate a {
+  color: #d15030; /* Verde */
+}
+
+[data-slug="woocommerce-guru-digital"] .row-actions a:hover {
+  color: #228b22; /* Verde escuro para hover */
+}
+
+[data-slug="woocommerce-guru-digital"]
+  .check-column
+  input[type="checkbox"]:checked
+  + label {
+  background-color: #32cd32; /* Verde */
+}

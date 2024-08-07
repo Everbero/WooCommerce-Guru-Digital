@@ -138,22 +138,23 @@ abstract class WC_Guru_Payment_Base {
             return; // Status não mapeado, então não faz nada
         }
 
-        $now = $this->get_now_time();
+        $now = $this->get_now_time()->format('Y-m-d H:i:s');
         $aprovadoEm = '';
         $canceladoEm = '';
+        $status = $status_mapping[$new_status];
 
         // procura e atualiza status e datas de aprovação e cancelamento
-        if($new_status == 'completed' || $new_status == 'completed') {
-            $aprovadoEm = $now->format('Y-m-d H:i:s');
+        if($new_status == 'completed' || $new_status == 'processing') {
+            
+            $aprovadoEm = $now;
         }
 
         if($new_status == 'cancelled' || $new_status == 'refunded' || $new_status == 'failed') {
-            $canceladoEm = $now->format('Y-m-d H:i:s');
+            $canceladoEm = $now;
         }
 
         $data = [
-            'status' => $status_mapping[$new_status],
-            'updated_at' => current_time('mysql'),
+            'status' => $status,
             'approved_at' => $aprovadoEm,
             'canceled_at' => $canceladoEm,
         ];
