@@ -12,20 +12,21 @@ abstract class WC_Guru_Payment_Base {
         $this->use_gateway_id = get_option('wc_guru_use_gateway_id', false);
     }
 
+    public function get_now_time() {
+        return new DateTime('now', new DateTimeZone('America/Sao_Paulo'));
+    }
+
     abstract public function process_order($order, $new_status);
 
-    protected function prepare_order_data($order, $payment_method, $additional_data = []) {
+    protected function prepare_order_data($order, $payment_method, $additional_data = [], $status) {
         $api_token = get_option('wc_guru_api_token');
-        $now = new DateTime('now', new DateTimeZone('America/Sao_Paulo'));
+        $now = $this->get_now_time();
         $data = [
             'api_token' => $api_token,
             'id' => $this->get_order_id($order, $payment_method),
             'payment_method' => $payment_method,
-            'status' => 'approved',
             'currency' => $order->get_currency(),
             'ordered_at' => $order->get_date_created()->format('Y-m-d H:i:s'),
-            'approved_at' => $now->format('Y-m-d H:i:s'),
-            'canceled_at' => '', // Este campo será preenchido se necessário
             'unavailable_until' => $now->format('Y-m-d H:i:s'),
             'warranty_until' => $now->add(new DateInterval('P7D'))->format('Y-m-d H:i:s'),
             'value' => $order->get_total(),
@@ -57,7 +58,8 @@ abstract class WC_Guru_Payment_Base {
                 // Outros campos da assinatura serão preenchidos conforme necessário
             ],
         ];
-
+        // atualiza os campos de status do pedido
+        array_merge($data, $this->update_order_status($order, $status));
         return array_merge($data, $additional_data);
     }
 
@@ -79,12 +81,12 @@ abstract class WC_Guru_Payment_Base {
         return $order_id;
     }
 
-    protected function get_order_items($order, $payment_method_is, $additional_data = []) {
+    protected function get_order_items($order, $payment_method_is, $additional_data = [], $new_status) {
         $items = [];
         $item_counter = 0;
 
         foreach ($order->get_items() as $item) {
-            $data = $this->prepare_order_data($order, $payment_method_is, $additional_data);
+            $data = $this->prepare_order_data($order, $payment_method_is, $additional_data, $new_status);
 
             $data['id'] = $this->get_order_id($order, $payment_method_is, $item_counter);
             $data['product']['id'] = strval($item->get_product_id());
@@ -117,10 +119,10 @@ abstract class WC_Guru_Payment_Base {
             $this->log('DADOS ENVIADOS: ' . json_encode($data));
         }
 
-        return $items;
     }
 
     public function update_order_status($order, $new_status) {
+
         $status_mapping = [
             'pending' => 'waiting_payment',
             'processing' => 'approved',
@@ -136,18 +138,29 @@ abstract class WC_Guru_Payment_Base {
             return; // Status não mapeado, então não faz nada
         }
 
-        $api_token = get_option('wc_guru_api_token');
+        $now = $this->get_now_time();
+        $aprovadoEm = '';
+        $canceladoEm = '';
+
+        // procura e atualiza status e datas de aprovação e cancelamento
+        if($new_status == 'completed' || $new_status == 'completed') {
+            $aprovadoEm = $now->format('Y-m-d H:i:s');
+        }
+
+        if($new_status == 'cancelled' || $new_status == 'refunded' || $new_status == 'failed') {
+            $canceladoEm = $now->format('Y-m-d H:i:s');
+        }
+
         $data = [
-            'api_token' => $api_token,
-            'id' => $this->get_order_id($order, $order->get_payment_method()),
             'status' => $status_mapping[$new_status],
             'updated_at' => current_time('mysql'),
+            'approved_at' => $aprovadoEm,
+            'canceled_at' => $canceladoEm,
         ];
 
         $this->log('Updating order status to ' . $status_mapping[$new_status] . ' for order ' . $order->get_id());
 
-        $response = $this->api->send_order_to_guru($data);
-        update_post_meta($order->get_id(), '_guru_status', $response);
+        return $data;
     }
 
     private function log($message, $level = 'info') {
@@ -157,6 +170,8 @@ abstract class WC_Guru_Payment_Base {
     }
 
     private function calculate_interest_per_item($total_with_interest, $total_without_interest, $num_items) {
-        return $this->api->calculate_interest_per_item($total_with_interest, $total_without_interest, $num_items);
+        $added_interest = $total_with_interest - $total_without_interest;
+        $added_value_per_item = $added_interest / $num_items;
+        return $added_value_per_item;
     }
 }

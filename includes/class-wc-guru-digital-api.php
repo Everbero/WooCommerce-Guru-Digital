@@ -43,12 +43,6 @@ class WC_Guru_Digital_API {
         return $response;
     }
 
-    public function calculate_interest_per_item($total_with_interest, $total_without_interest, $num_items) {
-        $added_interest = $total_with_interest - $total_without_interest;
-        $added_value_per_item = $added_interest / $num_items;
-        return $added_value_per_item;
-    }
-
     private function log($message, $level = 'info') {
         $this->logger->log($level, $message, array('source' => 'wc-guru-digital'));
     }
