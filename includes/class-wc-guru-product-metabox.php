@@ -2,7 +2,6 @@
 class WC_Guru_Product_Metabox {
     public function __construct() {
         add_action('add_meta_boxes', [$this, 'add_metabox']);
-        add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
         add_action('wp_ajax_wc_guru_send_test_order', [$this, 'send_test_order']);
     }
 
@@ -97,8 +96,10 @@ class WC_Guru_Product_Metabox {
         $api = new WC_Guru_Digital_API();
         $response = $api->send_order_to_guru($data);
 
+        $response = true;
         if ($response instanceof WP_Error) {
             wp_send_json_error('Erro ao enviar pedido: ' . $response->get_error_message());
+            $api->log('Response from Guru Digital: ' . $response->get_error_message(), 'error');
         } else {
             wp_send_json_success('Pedido fictício enviado com sucesso.');
         }

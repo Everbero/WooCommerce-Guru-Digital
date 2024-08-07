@@ -4,7 +4,6 @@ jQuery(document).ready(function($) {
 
         var $button = $(this);
         $button.prop('disabled', true).text('Enviando...');
-
         $.ajax({
             url: wc_guru_product_metabox.ajax_url,
             type: 'POST',

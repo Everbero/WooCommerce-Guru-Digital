@@ -18,7 +18,7 @@ abstract class WC_Guru_Payment_Base {
 
     abstract public function process_order($order, $new_status);
 
-    protected function prepare_order_data($order, $payment_method, $additional_data = [], $status) {
+    protected function prepare_order_data($order, $payment_method, $status, $additional_data = []) {
         $api_token = get_option('wc_guru_api_token');
         $now = $this->get_now_time();
         $data = [
@@ -81,12 +81,12 @@ abstract class WC_Guru_Payment_Base {
         return $order_id;
     }
 
-    protected function get_order_items($order, $payment_method_is, $additional_data = [], $new_status) {
+    protected function get_order_items($order, $payment_method_is, $new_status, $additional_data = [],) {
         $items = [];
         $item_counter = 0;
 
         foreach ($order->get_items() as $item) {
-            $data = $this->prepare_order_data($order, $payment_method_is, $additional_data, $new_status);
+            $data = $this->prepare_order_data($order, $payment_method_is, $new_status, $additional_data);
 
             $data['id'] = $this->get_order_id($order, $payment_method_is, $item_counter);
             $data['product']['id'] = strval($item->get_product_id());

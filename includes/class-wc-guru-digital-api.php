@@ -43,7 +43,7 @@ class WC_Guru_Digital_API {
         return $response;
     }
 
-    private function log($message, $level = 'info') {
+    public function log($message, $level = 'info') {
         $this->logger->log($level, $message, array('source' => 'wc-guru-digital'));
     }
 }

@@ -38,6 +38,7 @@ class WC_Guru_Digital {
         add_filter('plugin_action_links_' . plugin_basename(__FILE__), [$this, 'add_action_links']);
         add_filter('plugin_row_meta', [$this, 'add_row_meta'], 10, 2);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_styles']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
     }
 
     public function init_classes() {
@@ -66,6 +67,16 @@ class WC_Guru_Digital {
     public function enqueue_styles($hook_suffix) {
         if ($hook_suffix === 'plugins.php') {
             wp_enqueue_style('wc-guru-custom-styles', plugin_dir_url(__FILE__) . 'assets/css/custom-styles.css');
+        }
+    }
+
+    public function enqueue_scripts($hook) {
+        if ($hook === 'post.php' || $hook === 'post-new.php') {
+            wp_enqueue_script('wc-guru-product-metabox', plugins_url('assets/js/wc-guru-product-metabox.js', __FILE__), ['jquery'], null, true);
+            wp_localize_script('wc-guru-product-metabox', 'wc_guru_product_metabox', [
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('wc_guru_send_test_order_nonce')
+            ]);
         }
     }
     
