@@ -18,7 +18,7 @@ abstract class WC_Guru_Payment_Base {
 
     abstract public function process_order($order, $new_status);
 
-    protected function prepare_order_data($order, $payment_method, $status, $additional_data = []) {
+    protected function prepare_order_data($order, $payment_method, $new_status) {
         $api_token = get_option('wc_guru_api_token');
         $now = $this->get_now_time();
         $data = [
@@ -59,8 +59,7 @@ abstract class WC_Guru_Payment_Base {
             ],
         ];
         // atualiza os campos de status do pedido
-        array_merge($data, $this->update_order_status($order, $status));
-        return array_merge($data, $additional_data);
+        return array_merge($data, $this->update_order_status($order, $new_status));
     }
 
     protected function get_order_id($order, $payment_method_is, $item_counter = 0) {
@@ -81,12 +80,12 @@ abstract class WC_Guru_Payment_Base {
         return $order_id;
     }
 
-    protected function get_order_items($order, $payment_method_is, $new_status, $additional_data = [],) {
+    protected function get_order_items($order, $payment_method_is, $new_status) {
         $items = [];
         $item_counter = 0;
 
         foreach ($order->get_items() as $item) {
-            $data = $this->prepare_order_data($order, $payment_method_is, $new_status, $additional_data);
+            $data = $this->prepare_order_data($order, $payment_method_is, $new_status);
 
             $data['id'] = $this->get_order_id($order, $payment_method_is, $item_counter);
             $data['product']['id'] = strval($item->get_product_id());
@@ -121,8 +120,10 @@ abstract class WC_Guru_Payment_Base {
 
     }
 
-    public function update_order_status($order, $new_status) {
+    public function update_order_status($order, $new_status) {  
 
+        $this->log('Mudando status para: ' . print_r($new_status) . ' ' . print_r($order->status), 'error');
+        
         $status_mapping = [
             'pending' => 'waiting_payment',
             'processing' => 'approved',
@@ -133,23 +134,23 @@ abstract class WC_Guru_Payment_Base {
             'failed' => 'abandoned',
         ];
 
-        if (!isset($status_mapping[$new_status])) {
-            $this->log('Unmapped status: ' . $new_status, 'error');
+        if (!isset($status_mapping[$order->status])) {
+            $this->log('Unmapped status: ' . $order->status, 'error');
             return; // Status não mapeado, então não faz nada
         }
 
         $now = $this->get_now_time()->format('Y-m-d H:i:s');
         $aprovadoEm = '';
         $canceladoEm = '';
-        $status = $status_mapping[$new_status];
+        $status = $status_mapping[$order->status];
 
         // procura e atualiza status e datas de aprovação e cancelamento
-        if($new_status == 'completed' || $new_status == 'processing') {
+        if($order->status == 'completed' || $order->status == 'processing') {
             
             $aprovadoEm = $now;
         }
 
-        if($new_status == 'cancelled' || $new_status == 'refunded' || $new_status == 'failed') {
+        if($order->status == 'cancelled' || $order->status == 'refunded' || $order->status == 'failed') {
             $canceladoEm = $now;
         }
 
@@ -159,7 +160,6 @@ abstract class WC_Guru_Payment_Base {
             'canceled_at' => $canceladoEm,
         ];
 
-        $this->log('Updating order status to ' . $status_mapping[$new_status] . ' for order ' . $order->get_id());
 
         return $data;
     }

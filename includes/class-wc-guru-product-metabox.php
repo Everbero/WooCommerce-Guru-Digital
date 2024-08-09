@@ -49,7 +49,7 @@ class WC_Guru_Product_Metabox {
         $data = [
             'api_token' => get_option('wc_guru_api_token'),
             'id' => strval($product_id),
-            'payment_method' => 'other',
+            'payment_method' => 'bank_transfer',
             'status' => 'approved',
             'currency' => get_woocommerce_currency(),
             'ordered_at' => current_time('mysql'),
