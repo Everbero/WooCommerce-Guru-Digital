@@ -92,7 +92,10 @@ abstract class WC_Guru_Payment_Base {
             $data['product']['name'] = $item->get_name();
             $data['product']['qty'] = $item->get_quantity();
             $data['product']['cost'] = $item->get_total();
-
+            if($payment_method_is === 'billet') {
+                $data['billet_url'] = $this->get_billet_url($order);
+            }
+            
             // Checa se o pagamento foi por cartão de crédito
             if ($payment_method_is == 'credit_card') {
                 $totalComJuros = $order->get_meta('Total paid');
@@ -162,6 +165,20 @@ abstract class WC_Guru_Payment_Base {
 
 
         return $data;
+    }
+
+    private function get_billet_url($order) {
+        $payment_method = $order->get_payment_method();
+        $my_account_url = wc_get_page_permalink('myaccount');
+
+        if ($payment_method === 'pagarme-banking-ticket') {
+            return $order->get_meta('Banking Ticket URL') ?: $my_account_url;
+        } elseif ($payment_method === 'asaas-ticket') {
+            $json_string = $order->get_meta('__ASAAS_ORDER');
+            $asaas_order = !empty($json_string) ? json_decode($json_string, true) : null;
+            return $asaas_order['bankSlipUrl'] ?? $my_account_url;
+        }
+        return '';
     }
 
     private function log($message, $level = 'info') {

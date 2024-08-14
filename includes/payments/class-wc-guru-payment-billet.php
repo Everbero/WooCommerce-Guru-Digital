@@ -1,8 +1,9 @@
 <?php
 class WC_Guru_Payment_Billet extends WC_Guru_Payment_Base {
     public function process_order($order, $new_status) {
-        $billet_url = $this->get_billet_url($order);
-        $this->get_order_items($order, 'billet', ['billet_url' => $billet_url], $new_status);
+        // $billet_url = $this->get_billet_url($order);
+        // precisa alterar aqui para que billet url seja instanciado em payment base
+        $this->get_order_items($order, 'billet', $new_status);
     }
 
     private function get_billet_url($order) {

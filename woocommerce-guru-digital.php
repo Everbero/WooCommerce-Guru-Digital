@@ -7,7 +7,7 @@ defined('ABSPATH') || exit;
  * Description: <b>Envia pedidos do woocommerce para a guru digital</b>
  * Author: Douglas E.
  * Author URI: https://github.com/Everbero
- * Version: 2.0.1
+ * Version: 2.0.2
  * Requires at least: 5.2
  * Tested up to: 6.3.3
  * WC requires at least: 6.0
