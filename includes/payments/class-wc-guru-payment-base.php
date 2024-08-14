@@ -92,10 +92,10 @@ abstract class WC_Guru_Payment_Base {
             $data['product']['name'] = $item->get_name();
             $data['product']['qty'] = $item->get_quantity();
             $data['product']['cost'] = $item->get_total();
-            if($payment_method_is === 'billet') {
+            if ($payment_method_is === 'billet') {
                 $data['billet_url'] = $this->get_billet_url($order);
             }
-            
+
             // Checa se o pagamento foi por cartão de crédito
             if ($payment_method_is == 'credit_card') {
                 $totalComJuros = $order->get_meta('Total paid');
@@ -111,22 +111,22 @@ abstract class WC_Guru_Payment_Base {
 
             if ($response instanceof WP_Error) {
                 $this->log('Error sending item ' . $data['product']['name'] . ' to Guru Digital: ' . $response->get_error_message(), 'error');
-                $order->add_order_note("item: " . $data['product']['name'] . " Guru: Erro no processamento");
+                $order->add_order_note("Item: " . $data['product']['name'] . "\n" . $this->format_response_for_order_notes('{"Err": "Erro no processamento"}'));
             } else {
                 $this->log('Response from Guru Digital for item ' . $data['product']['name'] . ': ' . $response);
-                $order->add_order_note("item: " . $data['product']['name'] . " Resposta da Guru: " . $response);
+                $order_note = "Item: " . $data['product']['name'] . "\n" . $this->format_response_for_order_notes($response);
+                $order->add_order_note($order_note);
             }
 
             $item_counter++;
             $this->log('DADOS ENVIADOS: ' . json_encode($data));
         }
-
     }
 
-    public function update_order_status($order, $new_status) {  
+    public function update_order_status($order, $new_status) {
 
         $this->log('Mudando status para: ' . print_r($new_status) . ' ' . print_r($order->status), 'error');
-        
+
         $status_mapping = [
             'pending' => 'waiting_payment',
             'processing' => 'approved',
@@ -148,12 +148,12 @@ abstract class WC_Guru_Payment_Base {
         $status = $status_mapping[$order->status];
 
         // procura e atualiza status e datas de aprovação e cancelamento
-        if($order->status == 'completed' || $order->status == 'processing') {
-            
+        if ($order->status == 'completed' || $order->status == 'processing') {
+
             $aprovadoEm = $now;
         }
 
-        if($order->status == 'cancelled' || $order->status == 'refunded' || $order->status == 'failed') {
+        if ($order->status == 'cancelled' || $order->status == 'refunded' || $order->status == 'failed') {
             $canceladoEm = $now;
         }
 
@@ -165,6 +165,33 @@ abstract class WC_Guru_Payment_Base {
 
 
         return $data;
+    }
+
+    private function format_response_for_order_notes($response) {
+        // Decodifica o JSON da resposta
+        $response_data = json_decode($response, true);
+
+        // Determina a cor da bolinha (amarela para erros, verde para sucesso)
+        $color = 'yellow'; // Cor padrão
+        if (isset($response_data['status']) && $response_data['status'] === 'success') {
+            $color = 'green';
+        } else if (!empty($response_data)) {
+            $color = 'yellow';
+        }
+
+        // Ícones de bolinhas
+        $bullet_icon = $color === 'green' ? '🟢' : '🟡';
+
+        // Formata a resposta de forma legível
+        $formatted_response = '';
+        foreach ($response_data as $key => $value) {
+            if (is_array($value)) {
+                $value = implode(', ', $value);
+            }
+            $formatted_response .= ucfirst($key) . ': ' . $value . "\n";
+        }
+
+        return $bullet_icon . ' Resposta da Guru: ' . $formatted_response;
     }
 
     private function get_billet_url($order) {

@@ -1,7 +1,6 @@
 jQuery(document).ready(function($) {
     $('#wc-guru-send-test-order').on('click', function(e) {
         e.preventDefault();
-
         var $button = $(this);
         $button.prop('disabled', true).text('Enviando...');
         $.ajax({

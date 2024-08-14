@@ -3,6 +3,7 @@ class WC_Guru_Product_Metabox {
     public function __construct() {
         add_action('add_meta_boxes', [$this, 'add_metabox']);
         add_action('wp_ajax_wc_guru_send_test_order', [$this, 'send_test_order']);
+        // add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
     }
 
     public function add_metabox() {
@@ -17,9 +18,16 @@ class WC_Guru_Product_Metabox {
     }
 
     public function render_metabox($post) {
+        $response_message = get_post_meta($post->ID, '_wc_guru_test_order_response', true);
+
         echo '<p>Utilize este recurso para pré-cadastrar um produto no Guru. Isso enviará um pedido fictício com valores zerados.</p>';
-        echo '<button id="wc-guru-send-test-order" class="button button-primary">Enviar Pedido Fictício</button>';
+        echo '<button id="wc-guru-send-test-order" type="button" class="button button-primary">Enviar Pedido Fictício</button>';
         wp_nonce_field('wc_guru_send_test_order', 'wc_guru_test_order_nonce');
+
+        if ($response_message) {
+            echo '<p><strong>Último Resultado:</strong></p>';
+            echo '<p>' . esc_html($response_message) . '</p>';
+        }
     }
 
     public function enqueue_scripts($hook) {
@@ -96,13 +104,43 @@ class WC_Guru_Product_Metabox {
         $api = new WC_Guru_Digital_API();
         $response = $api->send_order_to_guru($data);
 
-        $response = true;
         if ($response instanceof WP_Error) {
-            wp_send_json_error('Erro ao enviar pedido: ' . $response->get_error_message());
-            $api->log('Response from Guru Digital: ' . $response->get_error_message(), 'error');
+            $error_message = 'Erro ao enviar pedido: ' . $response->get_error_message();
+            update_post_meta($product_id, '_wc_guru_test_order_response', $error_message);
         } else {
-            wp_send_json_success('Pedido fictício enviado com sucesso.');
+            $success_message = "Item: " . $data['product']['name'] . "\n" . $this->format_response_for_order_notes($response);
+            update_post_meta($product_id, '_wc_guru_test_order_response', $success_message);
+            wp_send_json_success($success_message);
+
         }
     }
+
+    private function format_response_for_order_notes($response) {
+        // Decodifica o JSON da resposta
+        $response_data = json_decode($response, true);
+
+        // Determina a cor da bolinha (amarela para erros, verde para sucesso)
+        $color = 'yellow'; // Cor padrão
+        if (isset($response_data['status']) && $response_data['status'] === 'success') {
+            $color = 'green';
+        } else if (!empty($response_data)) {
+            $color = 'yellow';
+        }
+
+        // Ícones de bolinhas
+        $bullet_icon = $color === 'green' ? '🟢' : '🟡';
+
+        // Formata a resposta de forma legível
+        $formatted_response = '';
+        foreach ($response_data as $key => $value) {
+            if (is_array($value)) {
+                $value = implode(', ', $value);
+            }
+            $formatted_response .= ucfirst($key) . ': ' . $value . "\n";
+        }
+
+        return $bullet_icon . ' Resposta da Guru: ' . $formatted_response;
+    }
 }
+
 new WC_Guru_Product_Metabox();

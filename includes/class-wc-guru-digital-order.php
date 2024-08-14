@@ -40,6 +40,7 @@ class WC_Guru_Digital_Order {
 
     public function display_order_meta_box($post) {
         $order_id = $post->ID;
-        echo '<p>Status da Guru Digital: <strong>' . get_post_meta($order_id, '_guru_status', true) . '</strong></p>';
+        $guru_status = get_post_meta($order_id, '_guru_status', true);
+        echo '<p>Status da Guru Digital: <strong>' . $guru_status . '</strong></p>';
     }
 }
