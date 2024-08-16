@@ -17,6 +17,7 @@ class WC_Guru_Digital_Order {
     }
 
     private function get_payment_handler_class($payment_method) {
+        
         $handlers = [
             'pagarme-banking-ticket' => 'WC_Guru_Payment_Billet',
             'asaas-ticket' => 'WC_Guru_Payment_Billet',

@@ -39,6 +39,12 @@ class WC_Guru_Digital {
         add_filter('plugin_row_meta', [$this, 'add_row_meta'], 10, 2);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_styles']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
+        
+        // Hooks para adicionar a coluna personalizada
+        add_filter('manage_edit-shop_order_columns', [$this, 'add_guru_response_column'], 20);
+        add_action('manage_shop_order_posts_custom_column', [$this, 'populate_guru_response_column']);
+        add_filter('manage_edit-shop_order_sortable_columns', [$this, 'make_guru_response_column_sortable']);
+        add_action('pre_get_posts', [$this, 'sort_orders_by_guru_response']);
     }
 
     public function init_classes() {
@@ -80,6 +86,67 @@ class WC_Guru_Digital {
         }
     }
     
+    // Adiciona a coluna "Guru Response" na lista de pedidos
+    public function add_guru_response_column($columns) {
+        $new_columns = array();
+
+        foreach ($columns as $key => $column) {
+            $new_columns[$key] = $column;
+            if ('order_total' === $key) {
+                $new_columns['guru_response'] = __('Guru Response', 'wc-guru');
+            }
+        }
+
+        return $new_columns;
+    }
+
+    // Preenche a coluna "Guru Response" com o valor do meta
+public function populate_guru_response_column($column) {
+    global $post;
+
+    if ('guru_response' === $column) {
+        $guru_response = get_post_meta($post->ID, '_guru_status', true);
+        
+        if ($guru_response) {
+            $decoded_response = json_decode($guru_response, true); // Decodifica o JSON
+
+            if (json_last_error() === JSON_ERROR_NONE) {
+                // Percorre o array para exibir os valores
+                foreach ($decoded_response as $key => $value) {
+                    // Verifica se o valor é um array ou string
+                    if (is_array($value)) {
+                        echo implode(', ', $value); // Exibe os valores do array como string
+                    } else {
+                        echo esc_html($value); // Exibe o valor como string
+                    }
+                }
+            } else {
+                echo __('Invalid JSON', 'wc-guru'); // Caso o JSON seja inválido
+            }
+        }
+    }
+}
+
+
+    // Torna a coluna "Guru Response" ordenável
+    public function make_guru_response_column_sortable($columns) {
+        $columns['guru_response'] = '_guru_status';
+        return $columns;
+    }
+
+    // Ordena a lista de pedidos pela coluna "Guru Response"
+    public function sort_orders_by_guru_response($query) {
+        if (!is_admin()) {
+            return;
+        }
+
+        $orderby = $query->get('orderby');
+
+        if ('_wc_guru_test_order_response' === $orderby) {
+            $query->set('meta_key', '_guru_status');
+            $query->set('orderby', 'meta_value');
+        }
+    }
 }
 
 new WC_Guru_Digital();
